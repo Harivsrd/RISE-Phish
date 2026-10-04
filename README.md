@@ -23,13 +23,6 @@ To develop an explainable phishing detection framework that uses conflict-aware 
 - Lightweight Language Model
 - Evidence Fusion and Decision Making
 
-## Team Members
-
-- Hari
-- Gangothri
-- Wesley
-- Hansika
-
 ## Development Methodology
 
 Development follows a phased approach:
