@@ -124,9 +124,26 @@ def resolve_and_verify_ip(
         if ip_obj.is_link_local:
             return False, f"Resolved IP '{ip_str}' is a link-local address (blocked).", resolved_ips
 
-        # 5. Multicast or Reserved
-        if ip_obj.is_multicast or ip_obj.is_reserved or ip_obj.is_unspecified:
-            return False, f"Resolved IP '{ip_str}' is multicast, reserved, or unspecified.", resolved_ips
+        # 5. Multicast, Unspecified, or Reserved
+        if ip_obj.is_multicast or ip_obj.is_unspecified:
+            return False, f"Resolved IP '{ip_str}' is multicast or unspecified.", resolved_ips
+
+        if ip_obj.is_reserved:
+            # Check for RFC 6052 / RFC 8215 IPv4-IPv6 translation prefix (64:ff9b::/96)
+            # which is commonly returned on modern IPv6/DNS64 networks for IPv4 destinations
+            if ip_obj.version == 6 and ip_obj in ipaddress.ip_network("64:ff9b::/96"):
+                embedded_v4 = ipaddress.ip_address(ip_obj.packed[-4:])
+                if embedded_v4.is_loopback and not allow_loopback:
+                    return False, f"Resolved NAT64 IP '{ip_str}' embeds loopback address '{embedded_v4}' (SSRF blocked).", resolved_ips
+                if embedded_v4.is_private and not allow_private:
+                    return False, f"Resolved NAT64 IP '{ip_str}' embeds private address '{embedded_v4}' (SSRF blocked).", resolved_ips
+                if str(embedded_v4) in CLOUD_METADATA_IPS:
+                    return False, f"Resolved NAT64 IP '{ip_str}' embeds cloud metadata address '{embedded_v4}'.", resolved_ips
+                if embedded_v4.is_link_local or embedded_v4.is_multicast or embedded_v4.is_reserved:
+                    return False, f"Resolved NAT64 IP '{ip_str}' embeds reserved address '{embedded_v4}'.", resolved_ips
+                # Embedded IPv4 is verified safe and public
+            else:
+                return False, f"Resolved IP '{ip_str}' is reserved.", resolved_ips
 
     return True, None, resolved_ips
 
