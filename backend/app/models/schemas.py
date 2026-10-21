@@ -342,3 +342,64 @@ class RepresentationSet(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of representation set creation"
     )
+
+
+# ============================================================
+# CRCE DISCREPANCY ENGINE MODELS (Phase 7)
+# ============================================================
+
+class DiscrepancyFinding(BaseModel):
+    """Detailed evidence unit representing a single identified representation discrepancy."""
+    source: str = Field(description="Source representation identifier (e.g., r1_raw, r2_normalized, r5_url)")
+    target: str = Field(description="Target representation identifier (e.g., r2_normalized, r3_visual, target_brand)")
+    discrepancy_type: str = Field(
+        description="Type: character_mismatch, length_discrepancy, token_divergence, brand_domain_mismatch, invisible_char_discrepancy"
+    )
+    position: Optional[int] = Field(default=None, description="Character offset where discrepancy manifests")
+    source_character: Optional[str] = Field(default=None, description="Character in source representation")
+    target_character: Optional[str] = Field(default=None, description="Character in target representation")
+    severity: float = Field(default=0.5, description="Discrepancy severity score between 0.0 and 1.0")
+    supporting_evidence: str = Field(description="Technical explanation justifying the discrepancy evidence")
+
+
+class CRCEResult(BaseModel):
+    """Structured output of the Cross-Representation Discrepancy Engine."""
+    # Pairwise Discrepancy Scores (0.0 to 1.0)
+    raw_normalized_discrepancy: float = Field(
+        default=0.0, 
+        description="Divergence between R1 (Raw) and R2 (Normalized)"
+    )
+    raw_visual_discrepancy: float = Field(
+        default=0.0, 
+        description="Divergence between R1 (Raw DOM) and R3 (Visual OCR)"
+    )
+    normalized_visual_discrepancy: float = Field(
+        default=0.0, 
+        description="Divergence between R2 (Normalized) and R3 (Visual OCR)"
+    )
+    url_brand_discrepancy: float = Field(
+        default=0.0, 
+        description="Discrepancy between R5 (URL Domain) and detected brand claims"
+    )
+    unicode_anomaly_score: float = Field(
+        default=0.0, 
+        description="Synthesized score from Phase 4 Unicode analysis"
+    )
+    overall_discrepancy: float = Field(
+        default=0.0, 
+        description="Composite cross-representation discrepancy index (0.0 to 1.0)"
+    )
+
+    # Core Research Indicator: Visual Normalization Convergence
+    # True if R1 != R2 and R1 != R3, but R2 == R3 (visual and normalized match, raw is obfuscated)
+    visual_normalization_convergence: bool = Field(
+        default=False,
+        description="True if normalized text aligns with visual OCR while raw text diverges"
+    )
+    
+    # Detailed granular discrepancy findings
+    findings: List[DiscrepancyFinding] = Field(
+        default_factory=list,
+        description="Collection of specific discrepancy evidence items"
+    )
+    summary: str = Field(default="", description="Executive summary of cross-representation findings")
