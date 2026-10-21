@@ -701,3 +701,95 @@ class DecisionResult(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of decision generation"
     )
+
+
+# ============================================================
+# EXPLANATION ENGINE MODELS (Phase 12)
+# ============================================================
+
+class UserAdvisory(BaseModel):
+    """User-facing explainable security guidance for non-technical audiences."""
+    headline: str = Field(description="High-level advisory headline (e.g. Danger: Phishing Site Detected)")
+    status_level: str = Field(description="Advisory category: SAFE, CAUTION, or DANGER")
+    summary: str = Field(description="Plain-English summary of the webpage's risk posture")
+    bullet_points: List[str] = Field(
+        default_factory=list,
+        description="Clear, non-technical explanatory bullet points highlighting key observations"
+    )
+    action_advice: str = Field(
+        description="Concrete, actionable safety guidance for the end-user"
+    )
+
+
+class DiscrepancyForensicSummary(BaseModel):
+    """Forensic breakdown of cross-representation divergence for cybersecurity analysts."""
+    pairwise_scores: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Pairwise discrepancy metrics (R1 vs R2, R1 vs R3, R2 vs R3, R5 vs Brand)"
+    )
+    visual_normalization_convergence: bool = Field(
+        default=False,
+        description="True if normalized DOM text matches visual OCR while raw DOM text diverges"
+    )
+    evasion_signature_detected: bool = Field(
+        default=False,
+        description="True if discrepancy indicates intentional anti-analysis evasion"
+    )
+    top_findings: List[str] = Field(
+        default_factory=list,
+        description="Primary discrepancy findings discovered across representations"
+    )
+
+
+class AnalystForensicReport(BaseModel):
+    """In-depth, auditable evidentiary report tailored for SOC analysts and researchers."""
+    verdict: ThreatVerdict = Field(description="Operational security threat classification")
+    recommended_action: DefensiveAction = Field(description="Prescribed automated posture response")
+    composite_threat_score: float = Field(description="Fused composite threat rating from 0.0 to 1.0")
+    confidence_score: float = Field(description="Statistical confidence in threat assessment")
+    target_brand: Optional[str] = Field(default=None, description="Impersonated or spoofed brand name")
+    registered_domain: str = Field(description="Registered domain parsed from address bar representation")
+    discrepancy_forensics: DiscrepancyForensicSummary = Field(
+        description="Forensic breakdown of cross-representation divergence"
+    )
+    unicode_anomalies_count: int = Field(default=0, description="Total count of flagged Unicode anomalies")
+    key_unicode_findings: List[str] = Field(
+        default_factory=list,
+        description="Specific character and codepoint findings (homoglyphs, zero-width, bidi)"
+    )
+    credential_vectors: List[str] = Field(
+        default_factory=list,
+        description="Discovered password inputs, forms, and credential entry targets"
+    )
+    url_lexical_indicators: List[str] = Field(
+        default_factory=list,
+        description="URL risk indicators (subdomains, suspicious TLD, entropy, punycode)"
+    )
+    slm_recovery_summary: Optional[str] = Field(
+        default=None,
+        description="Task 1 Semantic Recovery findings and de-obfuscation tactics"
+    )
+    slm_reasoning_summary: Optional[str] = Field(
+        default=None,
+        description="Task 2 SLM Threat Reasoning narrative"
+    )
+    rules_triggered: List[str] = Field(
+        default_factory=list,
+        description="Deterministic security policy rules activated during decision evaluation"
+    )
+    contributing_factors: List[EvidenceFactor] = Field(
+        default_factory=list,
+        description="Detailed numerical breakdown of weighted evidence contributions"
+    )
+
+
+class ExplanationReport(BaseModel):
+    """Unified container encapsulating both User Advisory and Analyst Forensic Report."""
+    analysis_id: str = Field(description="Tracking UUID for the analyzed webpage")
+    url: str = Field(description="Target analyzed URL")
+    user_advisory: UserAdvisory = Field(description="User-facing plain-language security advisory")
+    analyst_report: AnalystForensicReport = Field(description="Auditable evidentiary report for SOC analysts")
+    generated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of explanation generation"
+    )
