@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rise-phish-backend"
+version = "0.1.0"
+description = "RISE-Phish: Cross-Representation Discrepancy-Aware Phishing Detection Using Lightweight Language Models"
+authors = [{ name = "RISE-Phish Research Team" }]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-dotenv>=1.0.1",
+    "playwright>=1.48.0",
+    "beautifulsoup4>=4.12.3",
+    "lxml>=5.3.0",
+    "tldextract>=5.1.2",
+    "Pillow>=10.4.0",
+    "pytesseract>=0.3.13",
+    "rapidfuzz>=3.10.0",
+    "scikit-learn>=1.5.2",
+    "numpy>=1.26.4",
+    "pandas>=2.2.3",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.2"
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["backend"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
