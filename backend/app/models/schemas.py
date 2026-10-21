@@ -138,3 +138,47 @@ class HTMLFeatures(BaseModel):
         default="", 
         description="Concise, structured plain-text representation suitable for SLM context without DOM bloat"
     )
+
+
+# ============================================================
+# URL ANALYSIS MODELS (Phase 3)
+# ============================================================
+
+class URLFeatures(BaseModel):
+    """Structured lexical, syntactic, and structural evidence extracted from a URL."""
+    raw_url: str = Field(description="Original input or evaluated URL string")
+    url_length: int = Field(description="Total character length of the URL")
+    scheme: str = Field(description="URL protocol scheme (e.g., http, https)")
+    hostname: str = Field(description="Fully qualified domain name or IP host")
+    registered_domain: str = Field(description="Registrable domain including suffix (e.g., example.com)")
+    subdomain: str = Field(description="Subdomain prefix (e.g., login.account)")
+    path: str = Field(description="URL path component")
+    query: str = Field(description="Query string parameters")
+    tld: str = Field(description="Top-level domain suffix (e.g., com, org, xyz)")
+    
+    # Character & Syntactic counts
+    num_dots: int = Field(default=0, description="Total count of '.' characters")
+    num_hyphens: int = Field(default=0, description="Total count of '-' characters")
+    num_digits: int = Field(default=0, description="Total count of numeric digits")
+    num_special_chars: int = Field(default=0, description="Count of non-alphanumeric characters (excluding standard delimiters)")
+    
+    # Anomaly flags
+    has_at_symbol: bool = Field(default=False, description="Presence of '@' symbol (often used for credential confusion/obfuscation)")
+    has_ip_address: bool = Field(default=False, description="True if host is an IPv4 or IPv6 address")
+    is_ipv4: bool = Field(default=False, description="True if host is an IPv4 address")
+    is_ipv6: bool = Field(default=False, description="True if host is an IPv6 address")
+    has_percent_encoding: bool = Field(default=False, description="Presence of percent-encoded sequences (%XX)")
+    percent_encoding_count: int = Field(default=0, description="Number of percent-encoded characters")
+    has_punycode: bool = Field(default=False, description="Presence of Punycode IDN prefix (xn--) in hostname")
+    punycode_decoded_domain: Optional[str] = Field(default=None, description="Decoded Unicode string if Punycode is present")
+    
+    # Advanced lexical metrics
+    redirect_count: int = Field(default=0, description="Number of redirects observed leading to this URL")
+    subdomain_parts_count: int = Field(default=0, description="Number of labels in subdomain")
+    shannon_entropy: float = Field(default=0.0, description="Shannon entropy of the hostname character distribution")
+    suspicious_tld: bool = Field(default=False, description="True if the TLD has historically elevated abuse rates")
+    suspicious_keywords_found: List[str] = Field(default_factory=list, description="Phishing-correlated keywords discovered in URL")
+    
+    # Synthesized risk estimation
+    url_risk_score: float = Field(default=0.0, description="Normalized lexical risk score (0.0 to 1.0)")
+    risk_reasons: List[str] = Field(default_factory=list, description="Structured human-readable justifications for URL risk")
