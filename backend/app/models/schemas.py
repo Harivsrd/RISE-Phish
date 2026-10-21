@@ -793,3 +793,58 @@ class ExplanationReport(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of explanation generation"
     )
+
+
+# ============================================================
+# DATASET & ATTACK SYNTHESIS MODELS (Phase 13)
+# ============================================================
+
+class SynthesizedAttackResult(BaseModel):
+    """Detailed output of an adversarial representation attack synthesis operation."""
+    original_text: str = Field(description="Unaltered baseline text before perturbation")
+    obfuscated_text: str = Field(description="Adversarially perturbed text sequence")
+    attack_types_applied: List[str] = Field(
+        default_factory=list,
+        description="Attack techniques injected (e.g. homoglyph, zero_width, tag_chars, leetspeak)"
+    )
+    characters_perturbed_count: int = Field(
+        default=0,
+        description="Count of individual characters modified, inserted, or substituted"
+    )
+    perturbation_rate: float = Field(
+        default=0.0,
+        description="Ratio of altered characters to total character sequence length"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Diagnostic metadata (e.g. injected codepoints, brand targeted, seed)"
+    )
+
+
+class DatasetSample(BaseModel):
+    """Unified representation of a labeled webpage sample within research datasets."""
+    sample_id: str = Field(description="Unique tracking identifier for this sample")
+    url: str = Field(description="Webpage URL")
+    label: int = Field(description="Ground truth class: 0 for benign, 1 for phishing")
+    brand: Optional[str] = Field(default=None, description="Legitimate brand claimed or targeted")
+    html_content: Optional[str] = Field(default=None, description="Full or partial HTML DOM content")
+    text_content: Optional[str] = Field(default=None, description="Visible text payload")
+    is_obfuscated: bool = Field(default=False, description="True if sample contains synthetic representation attacks")
+    attack_type: Optional[str] = Field(default=None, description="Specific attack technique applied, if any")
+    provenance: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Audit metadata documenting origin source, crawler parameters, and synthesis seed"
+    )
+
+
+class DatasetSplit(BaseModel):
+    """Container for a partitioned dataset split (train, validation, test)."""
+    split_name: str = Field(description="Partition identifier: 'train', 'val', or 'test'")
+    samples_count: int = Field(description="Total number of samples in partition")
+    phishing_count: int = Field(description="Number of positive (phishing) samples")
+    benign_count: int = Field(description="Number of negative (benign) samples")
+    samples: List[DatasetSample] = Field(default_factory=list, description="Array of sample records")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of split creation"
+    )
