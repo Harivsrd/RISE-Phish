@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # Storage settings
     SQLITE_DB_URL: str = "sqlite:///./rise_phish.db"
 
+    # Browser Extension & SSRF settings
+    EXTENSION_MAX_MESSAGE_BYTES: int = 65536
+    EXTENSION_MAX_URLS_PER_MESSAGE: int = 20
+    SSRF_ALLOW_LOOPBACK_ANALYSIS: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

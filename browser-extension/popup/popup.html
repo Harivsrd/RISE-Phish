@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=380, initial-scale=1.0">
+  <title>RISE-Phish Guard</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo-shield">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="shield-svg">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">RISE-Phish</h1>
+          <span class="subtitle">AI Security Guard v2.0</span>
+        </div>
+      </div>
+      <div class="status-indicator" id="connection-status" title="Backend Connection Status">
+        <span class="status-dot"></span>
+        <span class="status-text" id="status-text">Checking...</span>
+      </div>
+    </header>
+
+    <!-- Main Controls -->
+    <section class="controls-card">
+      <div class="control-row">
+        <div class="control-label">
+          <span class="label-title">Real-Time Protection</span>
+          <span class="label-sub" id="site-status">Detecting page...</span>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-protection" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="actions-grid">
+        <button id="btn-scan-message" class="btn btn-primary" title="Analyze open message on screen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          Scan Message
+        </button>
+        <button id="btn-toggle-link-scan" class="btn btn-secondary" title="Analyze an individual link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-icon">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          Scan Link
+        </button>
+      </div>
+
+      <!-- Quick Link Input (hidden by default) -->
+      <div id="quick-link-box" class="quick-link-box hidden">
+        <div class="input-group">
+          <input type="url" id="quick-url-input" placeholder="https://example.com/login" />
+          <button id="btn-submit-url" class="btn btn-small">Analyze</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analysis Results Card -->
+    <main class="results-container" id="results-container">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🛡️</div>
+        <p class="empty-title">Ready to Inspect</p>
+        <p class="empty-desc">Open an email in Gmail or click "Scan Message" to perform an automated cross-representation forensic analysis.</p>
+      </div>
+
+      <div class="result-card hidden" id="result-card">
+        <!-- Verdict Banner -->
+        <div class="verdict-banner" id="verdict-banner">
+          <div class="verdict-badge-row">
+            <span class="badge" id="verdict-badge">SAFE</span>
+            <span class="threat-score" id="threat-score">Score: 0.00</span>
+          </div>
+          <h2 class="verdict-headline" id="verdict-headline">Authentic Message</h2>
+          <p class="verdict-explanation" id="verdict-explanation"></p>
+        </div>
+
+        <!-- Key Findings -->
+        <div class="findings-section" id="findings-section">
+          <h3 class="section-title">Forensic Indicators</h3>
+          <ul class="findings-list" id="findings-list"></ul>
+        </div>
+
+        <!-- Links List -->
+        <div class="links-section" id="links-section">
+          <h3 class="section-title">Embedded Links (<span id="links-count">0</span>)</h3>
+          <div class="links-list" id="links-list"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="http://localhost:5173" target="_blank" rel="noopener noreferrer" class="footer-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="footer-icon">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>Research Dashboard</span>
+      </a>
+      <div class="footer-actions">
+        <button id="btn-clear-history" class="btn-text" title="Clear scan history">Clear</button>
+        <a href="../options/options.html" target="_blank" class="footer-icon-link" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="footer-icon">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

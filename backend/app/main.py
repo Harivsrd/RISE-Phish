@@ -7,6 +7,7 @@ from backend.app.core.config import get_settings
 from backend.app.core.logging import logger
 from backend.app.api.routes import router as api_router
 from backend.app.api.demo import router as demo_router
+from backend.app.api.extension_routes import router as extension_router
 from backend.app.storage.database import get_db_manager
 
 settings = get_settings()
@@ -39,6 +40,7 @@ def create_application() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
+        allow_origin_regex=r"^chrome-extension://.*$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -46,6 +48,7 @@ def create_application() -> FastAPI:
 
     # Register API routes
     application.include_router(api_router, prefix=settings.API_V1_PREFIX)
+    application.include_router(extension_router, prefix=settings.API_V1_PREFIX)
     application.include_router(demo_router)
     application.include_router(demo_router, prefix=settings.API_V1_PREFIX)
 

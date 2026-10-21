@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RISE-Phish Guard — Extension Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo-shield">🛡️</div>
+        <div>
+          <h1>RISE-Phish Guard Settings</h1>
+          <p>Configure backend connectivity, automated inspection triggers, and privacy safeguards.</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- Section 1: Backend Configuration -->
+      <section class="card">
+        <h2>1. Backend API Connectivity</h2>
+        <p class="section-desc">Specify the local or remote endpoint hosting the RISE-Phish FastAPI service.</p>
+
+        <div class="form-group">
+          <label for="backend-url">FastAPI Server URL</label>
+          <div class="input-with-button">
+            <input type="url" id="backend-url" placeholder="http://127.0.0.1:8000" />
+            <button id="btn-test-connection" class="btn btn-secondary">Test Connection</button>
+          </div>
+          <span class="field-hint" id="connection-feedback">Default: http://127.0.0.1:8000</span>
+        </div>
+      </section>
+
+      <!-- Section 2: Scanning Rules -->
+      <section class="card">
+        <h2>2. Detection & Inspection Automation</h2>
+        <p class="section-desc">Control automated background scanning behavior on supported webmail platforms.</p>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="chk-enabled" checked />
+          <div>
+            <label for="chk-enabled">Enable Active Protection</label>
+            <p class="checkbox-desc">When disabled, no emails or links will be inspected.</p>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="chk-auto-scan" checked />
+          <div>
+            <label for="chk-auto-scan">Automatic Scanning on Email Open</label>
+            <p class="checkbox-desc">Automatically analyzes emails as soon as they are opened in Gmail. When unchecked, emails are only scanned when clicking "Scan Message".</p>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="chk-show-banner" checked />
+          <div>
+            <label for="chk-show-banner">Display In-Page Security Banners</label>
+            <p class="checkbox-desc">Injects an advisory banner directly above the message body showing threat scores, sender forensics, and link highlights.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Privacy & Data Safeguards -->
+      <section class="card">
+        <h2>3. Privacy & Ephemeral Data Policy</h2>
+        <p class="section-desc">RISE-Phish is engineered with strict data minimization principles.</p>
+        
+        <ul class="policy-list">
+          <li><strong>Zero Credential Collection:</strong> Never collects passwords, authentication tokens, session cookies, or form inputs.</li>
+          <li><strong>No Inbox Harvesting:</strong> Only inspects the currently open message; never reads surrounding inbox lists or unread emails.</li>
+          <li><strong>Ephemeral Processing:</strong> Email text is analyzed in memory; raw message content is never written to persistent database storage.</li>
+          <li><strong>SSRF Hardened:</strong> Embedded links targeting private, loopback, link-local, or cloud metadata IPs are blocked prior to crawling.</li>
+        </ul>
+
+        <div class="form-actions">
+          <button id="btn-clear-cache" class="btn btn-danger">Clear Stored Findings</button>
+          <span class="field-hint" id="clear-feedback"></span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <button id="btn-save" class="btn btn-primary">Save Settings</button>
+      <span id="save-toast" class="toast hidden">Settings saved successfully!</span>
+    </footer>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

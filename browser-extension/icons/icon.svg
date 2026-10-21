@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1e40af" />
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Shield -->
+  <path d="M 64,8 L 112,28 C 112,78 78,114 64,120 C 50,114 16,78 16,28 Z" fill="url(#shieldGrad)" />
+  <!-- Inner Shield Core -->
+  <path d="M 64,20 L 98,36 C 98,74 72,102 64,107 C 56,102 30,74 30,36 Z" fill="#0f172a" />
+  <!-- Radar / Discrepancy Cross Rays -->
+  <circle cx="64" cy="58" r="18" fill="none" stroke="url(#innerGrad)" stroke-width="3" stroke-dasharray="4,3" />
+  <circle cx="64" cy="58" r="8" fill="url(#innerGrad)" />
+  <line x1="64" y1="36" x2="64" y2="80" stroke="url(#innerGrad)" stroke-width="2.5" />
+  <line x1="42" y1="58" x2="86" y2="58" stroke="url(#innerGrad)" stroke-width="2.5" />
+</svg>
