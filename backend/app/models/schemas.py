@@ -1,7 +1,7 @@
 """Pydantic schemas and data contracts for RISE-Phish.
 """
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from pydantic import BaseModel, Field, HttpUrl
 
 
@@ -235,3 +235,28 @@ class UnicodeAnalysisResult(BaseModel):
         description="Normalized anomaly score (0.0 to 1.0) calibrated against text length and anomaly severity"
     )
     summary: str = Field(default="", description="Executive research summary of Unicode findings")
+
+
+# ============================================================
+# OCR PIPELINE MODELS (Phase 5)
+# ============================================================
+
+class OCRWord(BaseModel):
+    """Word-level extraction detail from an OCR pass."""
+    text: str = Field(description="Recognized word or token string")
+    confidence: float = Field(default=0.0, description="Confidence score from 0.0 to 100.0")
+    box: Optional[Tuple[int, int, int, int]] = Field(
+        default=None, 
+        description="Bounding box coordinates (left, top, width, height)"
+    )
+
+
+class OCRResult(BaseModel):
+    """Structured result of optical character recognition on page screenshot."""
+    text: str = Field(default="", description="Full extracted text content from image")
+    confidence: float = Field(default=0.0, description="Average confidence score across all detected words")
+    words: List[OCRWord] = Field(default_factory=list, description="Word tokens with confidence metrics")
+    available: bool = Field(default=True, description="True if OCR engine executed successfully")
+    engine_name: str = Field(description="Name of the active OCR engine backend")
+    error_message: Optional[str] = Field(default=None, description="Diagnostic details if OCR failed or was unavailable")
+    latency_ms: int = Field(default=0, description="OCR extraction latency in milliseconds")

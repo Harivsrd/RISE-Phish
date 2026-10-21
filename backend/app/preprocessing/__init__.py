@@ -1,12 +1,18 @@
 """Preprocessing package for RISE-Phish.
 """
 from backend.app.preprocessing.html_processor import clean_text, extract_html_features
+from backend.app.preprocessing.ocr_engine import (
+    BaseOCREngine,
+    MockOCREngine,
+    TesseractOCREngine,
+    get_ocr_engine,
+)
 from backend.app.preprocessing.unicode_processor import (
-    analyze_unicode,
-    get_character_script,
-    ZERO_WIDTH_CODEPOINTS,
     BIDI_CONTROL_CODEPOINTS,
     HOMOGLYPH_MAP,
+    ZERO_WIDTH_CODEPOINTS,
+    analyze_unicode,
+    get_character_script,
 )
 from backend.app.preprocessing.url_processor import (
     analyze_url,
@@ -25,4 +31,8 @@ __all__ = [
     "ZERO_WIDTH_CODEPOINTS",
     "BIDI_CONTROL_CODEPOINTS",
     "HOMOGLYPH_MAP",
+    "BaseOCREngine",
+    "TesseractOCREngine",
+    "MockOCREngine",
+    "get_ocr_engine",
 ]
