@@ -25,6 +25,7 @@ ZERO_WIDTH_CODEPOINTS: Set[int] = {
     0x180E,  # MONGOLIAN VOWEL SEPARATOR
     0x200E,  # LEFT-TO-RIGHT MARK
     0x200F,  # RIGHT-TO-LEFT MARK
+    0x00AD,  # SOFT HYPHEN
 }
 
 # Bidirectional (BiDi) overrides and embeddings
@@ -258,7 +259,7 @@ def analyze_unicode(text: Optional[str]) -> UnicodeAnalysisResult:
                 continue
 
         # --- Check 5: Fullwidth Forms & Normalization Discrepancies ---
-        if is_fullwidth_character(cp):
+        if is_fullwidth_character(cp) or (cp >= 0x2460 and normalized_char != char and not unicodedata.combining(char)):
             normalization_change_count += 1
             anomalies.append(
                 UnicodeAnomaly(
@@ -273,7 +274,7 @@ def analyze_unicode(text: Optional[str]) -> UnicodeAnalysisResult:
                     anomaly_type="normalization_change",
                     normalized_nfkc=normalized_char,
                     is_mixed_script_token=is_mixed_token,
-                    reason=f"Fullwidth character '{char}' ({hex_codepoint}) normalizes to '{normalized_char}' under NFKC",
+                    reason=f"Unicode character '{char}' ({hex_codepoint}) normalizes to '{normalized_char}' under NFKC",
                     severity=0.70,
                 )
             )

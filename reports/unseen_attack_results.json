@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "experiment": "Experiment 6: Unseen Representation Attack Generalization Evaluation",
+    "timestamp": "2026-10-21T06:00:08.182680+00:00",
+    "total_samples": 100,
+    "phishing_samples": 50,
+    "benign_samples": 50,
+    "random_seed": 42,
+    "slm_backend": "mock"
+  },
+  "generalization_gap": {
+    "delta_recall_vs_baseline": 1.0,
+    "delta_f1_vs_baseline": 1.0,
+    "baseline_recall": 0.0,
+    "rise_phish_recall": 1.0,
+    "baseline_f1": 0.0,
+    "rise_phish_f1": 1.0
+  },
+  "configurations": {
+    "baseline_random_forest": {
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "localized_benign_fpr": 0.0,
+      "attack_type_recall": {
+        "math_alphanumerics": 0.0,
+        "soft_hyphen_break": 0.0,
+        "combining_diacritics": 0.0,
+        "enclosed_alphanumerics": 0.0,
+        "unseen_chameleon_composite": 0.0
+      },
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          50,
+          0
+        ]
+      ]
+    },
+    "baseline_augmented_with_crce": {
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 1.0,
+      "localized_benign_fpr": 0.0,
+      "attack_type_recall": {
+        "math_alphanumerics": 0.0,
+        "soft_hyphen_break": 0.0,
+        "combining_diacritics": 0.0,
+        "enclosed_alphanumerics": 0.0,
+        "unseen_chameleon_composite": 0.0
+      },
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          50,
+          0
+        ]
+      ]
+    },
+    "full_rise_phish_system": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "localized_benign_fpr": 0.0,
+      "attack_type_recall": {
+        "math_alphanumerics": 1.0,
+        "soft_hyphen_break": 1.0,
+        "combining_diacritics": 1.0,
+        "enclosed_alphanumerics": 1.0,
+        "unseen_chameleon_composite": 1.0
+      },
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ]
+    }
+  }
+}

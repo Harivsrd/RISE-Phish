@@ -52,17 +52,23 @@ def build_normalized_representation(
         transformations.append("nfkc_unicode_normalization")
         current_text = nfkc_text
 
-    # 3. Strip zero-width & invisible format characters
+    # 3. Strip zero-width, invisible format, and uncomposed combining diacritical marks
     stripped_chars = []
     zero_width_stripped = False
+    combining_stripped = False
     for char in current_text:
         if ord(char) in ZERO_WIDTH_CODEPOINTS or ord(char) in BIDI_CONTROL_CODEPOINTS:
             zero_width_stripped = True
+        elif unicodedata.combining(char) > 0:
+            combining_stripped = True
         else:
             stripped_chars.append(char)
 
     if zero_width_stripped:
         transformations.append("invisible_character_stripping")
+    if combining_stripped:
+        transformations.append("combining_diacritic_stripping")
+    if zero_width_stripped or combining_stripped:
         current_text = "".join(stripped_chars)
 
     # 4. Standardized Whitespace Collapsing

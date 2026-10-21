@@ -17,6 +17,14 @@ from backend.app.datasets.synthesizers.composite import (
     create_synthetic_sample,
     synthesize_visual_convergence_payload,
 )
+from backend.app.datasets.synthesizers.unseen import (
+    inject_combining_diacritics,
+    inject_enclosed_alphanumerics,
+    inject_math_alphanumerics,
+    inject_soft_hyphens,
+    synthesize_unseen_chameleon_payload,
+    generate_unseen_attack_benchmark_corpus,
+)
 
 __all__ = [
     "LATIN_TO_HOMOGLYPH",
@@ -27,4 +35,10 @@ __all__ = [
     "inject_leetspeak",
     "create_synthetic_sample",
     "synthesize_visual_convergence_payload",
+    "inject_combining_diacritics",
+    "inject_enclosed_alphanumerics",
+    "inject_math_alphanumerics",
+    "inject_soft_hyphens",
+    "synthesize_unseen_chameleon_payload",
+    "generate_unseen_attack_benchmark_corpus",
 ]
