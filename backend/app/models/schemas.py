@@ -403,3 +403,38 @@ class CRCEResult(BaseModel):
         description="Collection of specific discrepancy evidence items"
     )
     summary: str = Field(default="", description="Executive summary of cross-representation findings")
+
+
+# ============================================================
+# BASELINE CLASSIFIER & EXPERIMENT MODELS (Phase 8)
+# ============================================================
+
+class BaselinePrediction(BaseModel):
+    """Output prediction and confidence from the baseline URL + HTML classifier."""
+    is_phishing: bool = Field(description="Binary classification prediction")
+    probability: float = Field(description="Predicted phishing probability score (0.0 to 1.0)")
+    model_name: str = Field(description="Name of the underlying classifier model")
+    feature_contributions: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Top contributing feature importances or values"
+    )
+
+
+class EvaluationMetrics(BaseModel):
+    """Standard evaluation metrics for academic reporting across experiments."""
+    accuracy: float = Field(description="Proportion of true results: (TP + TN) / Total")
+    precision: float = Field(description="Precision: TP / (TP + FP)")
+    recall: float = Field(description="Recall / True Positive Rate: TP / (TP + FN)")
+    f1_score: float = Field(description="Harmonic mean of precision and recall")
+    roc_auc: Optional[float] = Field(default=None, description="Area Under the ROC Curve")
+    false_positive_rate: float = Field(description="FPR / Fall-out: FP / (FP + TN)")
+    false_negative_rate: float = Field(description="FNR / Miss rate: FN / (FN + TP)")
+    confusion_matrix: List[List[int]] = Field(
+        default_factory=list,
+        description="Confusion matrix [[TN, FP], [FN, TP]]"
+    )
+    total_samples: int = Field(description="Total evaluation samples evaluated")
+    evaluated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of evaluation run"
+    )
