@@ -438,3 +438,118 @@ class EvaluationMetrics(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of evaluation run"
     )
+
+
+# ============================================================
+# SLM DUAL-TASK MODELS (Phase 9)
+# ============================================================
+
+class SemanticRecoveryResult(BaseModel):
+    """Task 1: Semantic recovery output identifying and reversing text obfuscation.
+    
+    Recovers canonical text from homoglyph substitutions, zero-width characters,
+    leetspeak, and rendering discrepancies.
+    """
+    recovered_text: str = Field(description="Canonical recovered text string with obfuscation resolved")
+    manipulation_detected: bool = Field(description="True if adversarial or evasive manipulation was discovered")
+    manipulation_tactics: List[str] = Field(
+        default_factory=list,
+        description="Identified manipulation tactics (e.g. homoglyph_substitution, zero_width_insertion, leetspeak)"
+    )
+    recovery_explanation: str = Field(
+        default="",
+        description="Explanation detailing which tokens were reconstructed and why"
+    )
+    confidence_score: float = Field(
+        default=1.0,
+        description="Confidence score in the semantic recovery output (0.0 to 1.0)"
+    )
+    recovered_tokens_count: int = Field(
+        default=0,
+        description="Number of distinct tokens modified or recovered"
+    )
+
+
+class SLMEvidenceInput(BaseModel):
+    """Structured evidence payload provided as input to the SLM Phishing Reasoning task (Task 2).
+    
+    Aggregates multi-representation findings, lexical URL metrics, CRCE discrepancy
+    indicators, and credential vectors for structured LLM reasoning.
+    """
+    url: str = Field(description="Target analyzed URL")
+    domain: str = Field(description="Extracted domain hostname")
+    registered_domain: str = Field(description="Registrable domain (e.g. example.com)")
+    page_title: Optional[str] = Field(default=None, description="Document title")
+    visible_text_snippet: str = Field(default="", description="Sanitized excerpt of page visible text")
+    recovered_text_snippet: Optional[str] = Field(
+        default=None, 
+        description="Recovered semantic text snippet from Task 1"
+    )
+    has_password_field: bool = Field(default=False, description="Presence of password/credential input fields")
+    form_count: int = Field(default=0, description="Total number of web forms on page")
+    detected_brands: List[str] = Field(default_factory=list, description="Brands claimed or referenced on page")
+    url_risk_score: float = Field(default=0.0, description="Synthesized lexical URL risk score (0.0 to 1.0)")
+    url_risk_reasons: List[str] = Field(default_factory=list, description="URL risk indicators flagged by Phase 3")
+    unicode_anomaly_score: float = Field(default=0.0, description="Unicode anomaly score from Phase 4")
+    crce_overall_discrepancy: float = Field(default=0.0, description="Overall cross-representation discrepancy score")
+    visual_normalization_convergence: bool = Field(
+        default=False,
+        description="True if R1 diverges from R2 and R3 while R2 converges with R3 (classic evasion signature)"
+    )
+    discrepancy_findings_summary: List[str] = Field(
+        default_factory=list,
+        description="Summary list of CRCE discrepancy findings"
+    )
+    social_engineering_indicators: List[str] = Field(
+        default_factory=list,
+        description="Discovered urgency, fear, account suspension, or verify-credential triggers"
+    )
+
+
+class SLMReasoningResult(BaseModel):
+    """Task 2: Structured phishing reasoning output from lightweight language model.
+    
+    Synthesizes representation discrepancies, URL context, credential vectors,
+    and brand alignment to deliver explainable, audit-grade threat conclusions.
+    """
+    phishing_intent_detected: bool = Field(description="Whether the webpage exhibits malicious/phishing intent")
+    risk_level: str = Field(
+        description="Threat classification: LOW, MEDIUM, HIGH, or CRITICAL"
+    )
+    target_brand: Optional[str] = Field(
+        default=None,
+        description="Target brand identified as being impersonated or spoofed, if any"
+    )
+    confidence_score: float = Field(
+        default=0.0,
+        description="Model confidence score in threat determination (0.0 to 1.0)"
+    )
+    deception_techniques: List[str] = Field(
+        default_factory=list,
+        description="Deception techniques identified (e.g. brand_spoofing, credential_harvesting, homoglyph_evasion)"
+    )
+    inconsistency_analysis: str = Field(
+        default="",
+        description="Specific analysis of cross-representation discrepancies and semantic contradictions"
+    )
+    reasoning_summary: str = Field(
+        default="",
+        description="Structured, evidence-grounded research narrative explaining the conclusion"
+    )
+    recommended_action: str = Field(
+        default="ALLOW",
+        description="Recommended defensive posture: ALLOW, INSPECT_FURTHER, or BLOCK"
+    )
+
+
+class SLMDualTaskResult(BaseModel):
+    """Unified container encapsulating both SLM tasks (Semantic Recovery + Phishing Reasoning)."""
+    recovery: SemanticRecoveryResult = Field(description="Task 1: Semantic recovery output")
+    reasoning: SLMReasoningResult = Field(description="Task 2: Phishing reasoning output")
+    backend_used: str = Field(description="SLM backend engine utilized (mock, api, local)")
+    model_name: str = Field(description="Name or identifier of the underlying language model")
+    latency_ms: int = Field(default=0, description="Total execution latency in milliseconds")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of SLM execution"
+    )

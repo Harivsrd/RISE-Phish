@@ -28,10 +28,14 @@ class Settings(BaseSettings):
     TESSERACT_CMD: str = ""
 
     # SLM settings
-    SLM_BACKEND: str = "mock"
+    SLM_BACKEND: str = "mock"  # "mock", "api", "local"
     SLM_MODEL_NAME: str = "microsoft/Phi-3-mini-4k-instruct"
     SLM_API_KEY: str = ""
-    SLM_API_URL: str = ""
+    SLM_API_URL: str = "https://api.openai.com/v1"
+    SLM_DEVICE: str = "cpu"  # "cpu", "cuda"
+    SLM_TEMPERATURE: float = 0.1
+    SLM_MAX_TOKENS: int = 1024
+    SLM_TIMEOUT_SECONDS: float = 30.0
 
     # Storage settings
     SQLITE_DB_URL: str = "sqlite:///./rise_phish.db"
