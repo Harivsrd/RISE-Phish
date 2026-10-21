@@ -182,3 +182,56 @@ class URLFeatures(BaseModel):
     # Synthesized risk estimation
     url_risk_score: float = Field(default=0.0, description="Normalized lexical risk score (0.0 to 1.0)")
     risk_reasons: List[str] = Field(default_factory=list, description="Structured human-readable justifications for URL risk")
+
+
+# ============================================================
+# UNICODE ANALYSIS MODELS (Phase 4)
+# ============================================================
+
+class UnicodeAnomaly(BaseModel):
+    """Preserves exact, un-modified evidence of a detected Unicode anomaly.
+    
+    Retains codepoint, character name, position, context token, normalized form,
+    and technical explanation of why it was flagged.
+    """
+    character: str = Field(description="Original Unicode character")
+    codepoint: str = Field(description="Formatted Unicode hex code point (e.g. U+0456)")
+    codepoint_int: int = Field(description="Integer code point value")
+    name: str = Field(description="Standard Unicode character name")
+    category: str = Field(description="Unicode general category (e.g., Ll, Cf, Cc, Mn)")
+    script: str = Field(description="Detected Unicode script (e.g., Latin, Cyrillic, Greek, Common)")
+    position: int = Field(description="0-based index offset in the inspected text")
+    context_token: Optional[str] = Field(default=None, description="Word/token containing the character")
+    anomaly_type: str = Field(
+        description="Classification: zero_width, bidi_control, tag_character, homoglyph, normalization_change, invisible_format"
+    )
+    normalized_nfkc: str = Field(description="Canonical NFKC decomposition/composition character")
+    is_mixed_script_token: bool = Field(
+        default=False, 
+        description="True if character script conflicts with the dominant script of its context token"
+    )
+    reason: str = Field(description="Human-readable justification for flagging this anomaly")
+    severity: float = Field(default=0.5, description="Anomaly severity rating from 0.0 to 1.0")
+
+
+class UnicodeAnalysisResult(BaseModel):
+    """Structured output of comprehensive Unicode anomaly inspection."""
+    total_characters: int = Field(default=0, description="Total characters analyzed")
+    ascii_characters: int = Field(default=0, description="Count of standard ASCII characters (0-127)")
+    non_ascii_characters: int = Field(default=0, description="Count of non-ASCII characters")
+    anomalies: List[UnicodeAnomaly] = Field(default_factory=list, description="Detailed list of flagged anomalies")
+    
+    # Category counts
+    zero_width_count: int = Field(default=0, description="Number of zero-width / joiner characters")
+    bidi_control_count: int = Field(default=0, description="Number of bidirectional override characters")
+    tag_character_count: int = Field(default=0, description="Number of Plane 14 tag characters")
+    homoglyph_count: int = Field(default=0, description="Number of cross-script lookalike / homoglyph characters")
+    normalization_change_count: int = Field(default=0, description="Characters altered under NFKC normalization")
+    mixed_script_token_count: int = Field(default=0, description="Number of tokens with conflicting scripts")
+    
+    detected_scripts: List[str] = Field(default_factory=list, description="Unique scripts discovered across text")
+    unicode_anomaly_score: float = Field(
+        default=0.0, 
+        description="Normalized anomaly score (0.0 to 1.0) calibrated against text length and anomaly severity"
+    )
+    summary: str = Field(default="", description="Executive research summary of Unicode findings")
