@@ -1,0 +1,93 @@
+{
+  "title": "RISE-Phish Empirical System Benchmark Evaluation",
+  "total_test_samples": 100,
+  "phishing_samples": 50,
+  "benign_samples": 50,
+  "configurations": {
+    "baseline_random_forest": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "localized_benign_fpr": 0.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ]
+    },
+    "baseline_augmented_with_crce": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "localized_benign_fpr": 0.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ]
+    },
+    "slm_alone": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "localized_benign_fpr": 0.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ]
+    },
+    "full_rise_phish_system": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "localized_benign_fpr": 0.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ]
+    }
+  },
+  "evaluated_at": "2026-10-21T05:27:55.808647+00:00"
+}
