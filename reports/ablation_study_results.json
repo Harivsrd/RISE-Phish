@@ -1,0 +1,133 @@
+{
+  "title": "RISE-Phish Systematic Component Ablation Study",
+  "total_test_samples": 100,
+  "configurations": {
+    "full_system": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    },
+    "without_crce": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    },
+    "without_slm": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    },
+    "without_unicode": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    },
+    "without_visual_ocr": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    },
+    "linear_fusion": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "standard_phishing_recall": 1.0,
+      "adversarial_obfuscated_recall": 1.0,
+      "confusion_matrix": [
+        [
+          50,
+          0
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "delta_f1": 0.0
+    }
+  },
+  "evaluated_at": "2026-10-21T05:32:55.450682+00:00"
+}
