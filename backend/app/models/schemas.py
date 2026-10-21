@@ -260,3 +260,85 @@ class OCRResult(BaseModel):
     engine_name: str = Field(description="Name of the active OCR engine backend")
     error_message: Optional[str] = Field(default=None, description="Diagnostic details if OCR failed or was unavailable")
     latency_ms: int = Field(default=0, description="OCR extraction latency in milliseconds")
+
+
+# ============================================================
+# MULTI-REPRESENTATION MODELS (Phase 6)
+# ============================================================
+
+class RawRepresentation(BaseModel):
+    """R1: Unaltered, raw character representation extracted directly from DOM text nodes.
+    
+    Never normalized, keeping exact homoglyphs, zero-width characters, and encoding entities.
+    """
+    text: str = Field(description="Exact raw text sequence extracted from page")
+    character_count: int = Field(description="Total raw character count")
+    source_type: str = Field(default="dom_text_nodes", description="Source extraction mechanism")
+
+
+class NormalizedRepresentation(BaseModel):
+    """R2: Traceably normalized representation derived from R1.
+    
+    Applies NFKC canonical decomposition/composition, HTML entity decoding,
+    and invisible character stripping with full audit of applied transformations.
+    """
+    text: str = Field(description="Standardized normalized text sequence")
+    character_count: int = Field(description="Total normalized character count")
+    transformations_applied: List[str] = Field(
+        default_factory=list,
+        description="Ordered list of transformation stages executed"
+    )
+    characters_altered_count: int = Field(
+        default=0,
+        description="Number of characters modified, added, or stripped during normalization"
+    )
+
+
+class VisualRepresentation(BaseModel):
+    """R3: Visual / OCR representation captured from rasterized screenshot."""
+    text: str = Field(default="", description="Text extracted via Optical Character Recognition")
+    confidence: float = Field(default=0.0, description="Average confidence rating of OCR extraction")
+    available: bool = Field(default=True, description="True if screenshot and OCR succeeded")
+    screenshot_path: Optional[str] = Field(default=None, description="Path to screenshot asset")
+    words_count: int = Field(default=0, description="Total word tokens recognized")
+    engine_name: str = Field(default="TesseractOCR", description="OCR engine utilized")
+    error_message: Optional[str] = Field(default=None, description="Diagnostic note if OCR failed")
+
+
+class SemanticRepresentation(BaseModel):
+    """R4: Structured semantic representation extracting core intent and claims.
+    
+    Distills page title, headings hierarchy, credential form intent,
+    and key action tokens while removing layout noise.
+    """
+    title: Optional[str] = Field(default=None, description="Document title")
+    headings_text: str = Field(default="", description="Flattened text of all headings")
+    form_intent_summary: str = Field(default="", description="Summary of credential forms and inputs")
+    action_tokens: List[str] = Field(default_factory=list, description="Interactive action verbs and button labels")
+    structured_content: str = Field(default="", description="Clean semantic summary for downstream modeling")
+
+
+class URLRepresentation(BaseModel):
+    """R5: Decomposed address bar / URL representation."""
+    raw_url: str = Field(description="Complete resolved target URL")
+    hostname: str = Field(description="Full hostname or IP host")
+    registered_domain: str = Field(description="Registrable domain (e.g. example.com)")
+    subdomain: str = Field(description="Subdomain hierarchy")
+    path: str = Field(description="URL path hierarchy")
+    tld: str = Field(description="Top-level domain")
+    punycode_decoded: Optional[str] = Field(default=None, description="Decoded Unicode string if Punycode present")
+    domain_tokens: List[str] = Field(default_factory=list, description="Individual lexical tokens from domain and subdomains")
+
+
+class RepresentationSet(BaseModel):
+    """Unified container for all 5 representations (R1 - R5) of a target webpage."""
+    analysis_id: str = Field(description="Unique analysis tracking UUID")
+    r1_raw: RawRepresentation = Field(description="R1: Raw DOM representation")
+    r2_normalized: NormalizedRepresentation = Field(description="R2: Traceably normalized representation")
+    r3_visual: VisualRepresentation = Field(description="R3: Visual / OCR representation")
+    r4_semantic: SemanticRepresentation = Field(description="R4: Semantic intent representation")
+    r5_url: URLRepresentation = Field(description="R5: Decomposed URL representation")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of representation set creation"
+    )
