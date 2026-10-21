@@ -9,7 +9,12 @@ import unicodedata
 from typing import List, Tuple
 
 from backend.app.models.schemas import NormalizedRepresentation
-from backend.app.preprocessing.unicode_processor import ZERO_WIDTH_CODEPOINTS, BIDI_CONTROL_CODEPOINTS
+from backend.app.preprocessing.unicode_processor import (
+    ZERO_WIDTH_CODEPOINTS,
+    BIDI_CONTROL_CODEPOINTS,
+    HOMOGLYPH_MAP,
+    get_character_script,
+)
 
 
 def build_normalized_representation(
@@ -71,7 +76,33 @@ def build_normalized_representation(
     if zero_width_stripped or combining_stripped:
         current_text = "".join(stripped_chars)
 
-    # 4. Standardized Whitespace Collapsing
+    # 4. Resolve mixed-script homoglyphs to canonical ASCII
+    homoglyphs_resolved = False
+    tokens = re.split(r"(\s+)", current_text)
+    resolved_tokens = []
+    for tok in tokens:
+        if not tok.isspace() and tok:
+            letters = [c for c in tok if c.isalpha()]
+            scripts = {get_character_script(c) for c in letters if get_character_script(c) not in ("Common", "Other")}
+            if "Latin" in scripts and len(scripts) > 1:
+                new_tok = []
+                for c in tok:
+                    if c in HOMOGLYPH_MAP:
+                        new_tok.append(HOMOGLYPH_MAP[c])
+                        homoglyphs_resolved = True
+                    else:
+                        new_tok.append(c)
+                resolved_tokens.append("".join(new_tok))
+            else:
+                resolved_tokens.append(tok)
+        else:
+            resolved_tokens.append(tok)
+
+    if homoglyphs_resolved:
+        transformations.append("homoglyph_resolution")
+        current_text = "".join(resolved_tokens)
+
+    # 5. Standardized Whitespace Collapsing
     collapsed = re.sub(r"\s+", " ", current_text).strip()
     if collapsed != current_text:
         transformations.append("whitespace_collapsing")

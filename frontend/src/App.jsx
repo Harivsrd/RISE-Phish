@@ -313,9 +313,9 @@ export default function App() {
             )}
 
             {/* SOC Analyst Deep Forensic Drawer */}
-            {currentAnalysis.explanation?.analyst_forensic_report && (
+            {(currentAnalysis.explanation?.analyst_report || currentAnalysis.explanation?.analyst_forensic_report) && (
               <AnalystDrawer 
-                report={currentAnalysis.explanation.analyst_forensic_report} 
+                report={currentAnalysis.explanation.analyst_report || currentAnalysis.explanation.analyst_forensic_report} 
                 crce={currentAnalysis.crce}
                 unicodeAnalysis={currentAnalysis.unicode_analysis}
               />

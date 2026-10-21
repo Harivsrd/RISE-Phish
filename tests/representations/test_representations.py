@@ -183,7 +183,7 @@ async def test_build_representation_set_orchestration():
 
     assert rep_set.analysis_id == "test-job-uuid-12345"
     assert rep_set.r1_raw.text == "M\u0456crosoft Online Account"
-    assert rep_set.r2_normalized.text == "Mіcrosoft Online Account"
+    assert rep_set.r2_normalized.text == "Microsoft Online Account"
     assert rep_set.r3_visual.available is False  # Screenshot was None
     assert rep_set.r4_semantic.title == "Sign In"
     assert "example" in rep_set.r5_url.domain_tokens

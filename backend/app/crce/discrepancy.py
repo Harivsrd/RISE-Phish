@@ -113,9 +113,10 @@ def evaluate_discrepancies(
         # but R2 closely aligns with R3, this confirms visual spoofing!
         # ============================================================
         if (
-            raw_norm_discrepancy > 0.05
-            and raw_vis_discrepancy > 0.05
-            and norm_vis_discrepancy < 0.20
+            raw_norm_discrepancy >= 0.02
+            and raw_vis_discrepancy >= 0.05
+            and norm_vis_discrepancy < 0.35
+            and norm_vis_discrepancy <= raw_vis_discrepancy
         ):
             visual_convergence = True
             findings.append(

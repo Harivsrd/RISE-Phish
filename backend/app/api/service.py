@@ -219,12 +219,14 @@ async def analyze_url_pipeline(
     )
 
     completed_at = datetime.now(timezone.utc)
+    status_val = "COMPLETED" if crawler_result.success else "DEGRADED"
+    error_msg = crawler_result.error_message if not crawler_result.success else None
 
     # 12. Assemble Full Technical Response
     response = AnalysisDetailResponse(
         analysis_id=analysis_id,
         url=url,
-        status="COMPLETED",
+        status=status_val,
         verdict=decision.verdict,
         recommended_action=decision.recommended_action,
         composite_threat_score=decision.composite_threat_score,
@@ -240,6 +242,7 @@ async def analyze_url_pipeline(
         decision=decision,
         fused_evidence=fused,
         explanation=explanation,
+        error_message=error_msg,
         created_at=created_at,
         completed_at=completed_at,
     )
@@ -248,7 +251,7 @@ async def analyze_url_pipeline(
     db.save_record(
         analysis_id=analysis_id,
         url=url,
-        status="COMPLETED",
+        status=status_val,
         verdict=decision.verdict.value,
         recommended_action=decision.recommended_action.value,
         composite_threat_score=decision.composite_threat_score,
@@ -259,6 +262,7 @@ async def analyze_url_pipeline(
         report_json=response.model_dump_json(),
         created_at=created_at.isoformat(),
         completed_at=completed_at.isoformat(),
+        error_message=error_msg,
     )
     logger.info(f"Completed analysis {analysis_id}: Verdict={decision.verdict.value}, Score={decision.composite_threat_score}")
 
