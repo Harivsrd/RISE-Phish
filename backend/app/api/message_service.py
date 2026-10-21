@@ -187,27 +187,36 @@ def evaluate_link_text_mismatch(link: MessageEmbeddedLink) -> Tuple[bool, str]:
     if not text:
         return False, ""
 
-    # Check if displayed text looks like a URL or claims a domain
+    # 1. Check if displayed text explicitly looks like a URL or claims a domain
     url_like_match = re.search(r"(?:https?://)?([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})", text)
-    if not url_like_match:
-        # Check if text explicitly names a major brand
+    if url_like_match:
+        displayed_host = url_like_match.group(1).lower().lstrip("www.")
+        href_host = (urlparse(href).hostname or "").lower().lstrip("www.")
+
+        if not href_host:
+            return False, ""
+
+        # Extract base registered domains to allow legitimate subdomains (e.g. click.linkedin.com vs linkedin.com)
+        disp_parts = displayed_host.split(".")
+        href_parts = href_host.split(".")
+        disp_root = ".".join(disp_parts[-2:]) if len(disp_parts) >= 2 else displayed_host
+        href_root = ".".join(href_parts[-2:]) if len(href_parts) >= 2 else href_host
+
+        # If base roots differ and neither is a subdomain of the other
+        if disp_root != href_root and not href_host.endswith(f".{displayed_host}") and not displayed_host.endswith(f".{href_host}"):
+            return True, f"Displayed link text claims '{displayed_host}', but destination leads to '{href_host}'."
+
+        return False, ""
+
+    # 2. Check if text explicitly prompts credentials / login for a specific brand
+    auth_intent_match = re.search(r"\b(?:sign\s*in|log\s*in|verify|update\s*credentials|re-authenticate)\b", text, re.IGNORECASE)
+    if auth_intent_match:
         claimed_brand = identify_claimed_brand(text)
         if claimed_brand:
             href_domain = urlparse(href).hostname or ""
             canonical = TARGET_BRAND_CANONICAL_DOMAINS.get(claimed_brand, set())
             if not any(href_domain == c or href_domain.endswith(f".{c}") for c in canonical):
-                return True, f"Link text explicitly claims '{claimed_brand.title()}' but target leads to '{href_domain}'."
-        return False, ""
-
-    displayed_host = url_like_match.group(1).lower().lstrip("www.")
-    href_host = (urlparse(href).hostname or "").lower().lstrip("www.")
-
-    if not href_host:
-        return False, ""
-
-    # If displayed hostname differs from href hostname
-    if displayed_host != href_host and not href_host.endswith(f".{displayed_host}"):
-        return True, f"Displayed link text claims '{displayed_host}', but destination leads to '{href_host}'."
+                return True, f"Link text prompts sign-in for '{claimed_brand.title()}' but target leads to '{href_domain}'."
 
     return False, ""
 
@@ -233,8 +242,10 @@ async def evaluate_embedded_urls(
         )
 
         if not is_safe:
-            # Blocked by SSRF filter: Private, loopback, metadata, or malformed
-            finding = f"SSRF Blocked: {ssrf_err}"
+            is_dns_failure = "DNS resolution failed" in (ssrf_err or "") or "No IP addresses" in (ssrf_err or "")
+            is_true_ssrf = not is_dns_failure
+
+            finding = f"SSRF Blocked: {ssrf_err}" if is_true_ssrf else f"Host Unreachable: {ssrf_err}"
             if is_mismatch:
                 finding += f" | {mismatch_finding}"
 
@@ -243,9 +254,9 @@ async def evaluate_embedded_urls(
                     url=raw_url,
                     displayed_text=display_text,
                     is_mismatch=is_mismatch,
-                    ssrf_blocked=True,
-                    verdict=ThreatVerdict.INVESTIGATE,
-                    composite_threat_score=0.70,
+                    ssrf_blocked=is_true_ssrf,
+                    verdict=ThreatVerdict.PHISHING if (is_mismatch and is_true_ssrf) else ThreatVerdict.INVESTIGATE,
+                    composite_threat_score=0.70 if is_true_ssrf else (0.75 if is_mismatch else 0.25),
                     target_brand=None,
                     finding_summary=finding,
                 )
@@ -390,8 +401,15 @@ async def analyze_message_pipeline(
     if ssrf_blocked_count > 0:
         key_findings.append(f"{ssrf_blocked_count} link(s) blocked due to internal/loopback IP restrictions.")
 
-    # Decision Policy
-    if phishing_links_count > 0 or mismatch_count > 0 or (sender_discrepancy and len(bounded_req.embedded_links) > 0) or composite_threat >= 0.65:
+    # Decision Policy: require corroborating signals for CONFIRMED PHISHING to prevent false alarms
+    is_phishing = (
+        phishing_links_count > 0
+        or (sender_discrepancy and len(bounded_req.embedded_links) > 0)
+        or (mismatch_count > 0 and (urgency_score > 0.2 or sender_discrepancy))
+        or composite_threat >= 0.65
+    )
+
+    if is_phishing:
         verdict = ThreatVerdict.PHISHING
         action = DefensiveAction.BLOCK_ACCESS
         headline = "CONFIRMED PHISHING MESSAGE"
@@ -402,7 +420,7 @@ async def analyze_message_pipeline(
             f"{'high-risk embedded URLs, ' if phishing_links_count > 0 else ''}"
             "and coercive urgency. Do not click any links or provide personal credentials."
         )
-    elif composite_threat >= 0.35 or urgency_score >= 0.40 or sender_discrepancy or ssrf_blocked_count > 0:
+    elif composite_threat >= 0.35 or urgency_score >= 0.40 or sender_discrepancy or mismatch_count > 0 or ssrf_blocked_count > 0:
         verdict = ThreatVerdict.INVESTIGATE
         action = DefensiveAction.WARN_USER
         headline = "SUSPICIOUS MESSAGE — PROCEED WITH CAUTION"

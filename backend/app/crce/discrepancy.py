@@ -139,7 +139,11 @@ def evaluate_discrepancies(
     # ============================================================
     # Search across visible text, semantic title, and headings
     searchable_brand_text = f"{rep_set.r4_semantic.title or ''} {rep_set.r4_semantic.headings_text} {r2_text[:500]}"
-    detected_brand = identify_claimed_brand(searchable_brand_text, explicit_brand)
+    detected_brand = identify_claimed_brand(
+        searchable_brand_text,
+        explicit_brand,
+        registered_domain=rep_set.r5_url.registered_domain,
+    )
 
     url_brand_discrepancy = 0.0
     if detected_brand:

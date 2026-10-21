@@ -10,13 +10,23 @@ from backend.app.models.schemas import DiscrepancyFinding, URLRepresentation
 
 # Canonical legitimate domains for high-profile target brands
 TARGET_BRAND_CANONICAL_DOMAINS: Dict[str, Set[str]] = {
-    "microsoft": {"microsoft.com", "live.com", "office.com", "outlook.com", "msn.com", "microsoftonline.com"},
-    "apple": {"apple.com", "icloud.com", "me.com"},
-    "google": {"google.com", "gmail.com", "youtube.com", "googleblog.com"},
-    "paypal": {"paypal.com", "paypal-communication.com"},
+    "microsoft": {
+        "microsoft.com", "live.com", "office.com", "outlook.com", "msn.com",
+        "microsoftonline.com", "skype.com", "bing.com", "xbox.com",
+        "linkedin.com", "licdn.com", "github.com", "github.io"
+    },
+    "apple": {"apple.com", "icloud.com", "me.com", "mzstatic.com"},
+    "google": {
+        "google.com", "gmail.com", "youtube.com", "googleblog.com",
+        "kaggle.com", "blogger.com", "android.com", "googleusercontent.com", "gstatic.com"
+    },
+    "linkedin": {"linkedin.com", "licdn.com"},
+    "kaggle": {"kaggle.com"},
+    "github": {"github.com", "github.io", "githubassets.com"},
+    "paypal": {"paypal.com", "paypal-communication.com", "paypalobjects.com"},
     "netflix": {"netflix.com"},
     "amazon": {"amazon.com", "aws.amazon.com", "amazon.co.uk", "amazon.de"},
-    "facebook": {"facebook.com", "meta.com", "fb.com"},
+    "facebook": {"facebook.com", "meta.com", "fb.com", "instagram.com", "whatsapp.com", "threads.net"},
     "instagram": {"instagram.com"},
     "chase": {"chase.com", "jpmorganchase.com"},
     "wellsfargo": {"wellsfargo.com"},
@@ -25,18 +35,29 @@ TARGET_BRAND_CANONICAL_DOMAINS: Dict[str, Set[str]] = {
     "adobe": {"adobe.com"},
     "dhl": {"dhl.com", "dhl-express.com"},
     "usps": {"usps.com"},
+    "twitter": {"twitter.com", "x.com", "t.co"},
 }
+
+
+OAUTH_AND_SOCIAL_PATTERNS = [
+    r"\b(?:sign\s*in|log\s*in|continue|auth(?:enticate)?)\s+with\s+(?:google|apple|facebook|microsoft|github|linkedin)\b",
+    r"\b(?:download|get\s*it|available)\s+(?:on|at)\s+(?:google\s*play|apple\s*app\s*store|app\s*store)\b",
+    r"\b(?:follow|like|connect|share)\s+(?:on|with)\s+(?:twitter|facebook|linkedin|instagram|youtube)\b",
+    r"\bcopyright\s+(?:©|\(c\))?\s*\d{4}\s+(?:microsoft|google|apple|meta|facebook)\b",
+]
 
 
 def identify_claimed_brand(
     text_content: str,
     explicit_brand: Optional[str] = None,
+    registered_domain: Optional[str] = None,
 ) -> Optional[str]:
     """Identifies if any monitored brand name is claimed in the provided text.
 
     Args:
         text_content: Searchable text (e.g. title, headings, or OCR text).
         explicit_brand: Pre-detected or manually specified brand target.
+        registered_domain: Optional registered domain of the page to contextualize identity.
 
     Returns:
         Brand name string (lowercase) or None.
@@ -47,7 +68,20 @@ def identify_claimed_brand(
     if not text_content:
         return None
 
-    lower_text = text_content.lower()
+    # 1. Domain alignment: If registered_domain directly matches a known canonical brand, check if that brand is claimed
+    if registered_domain:
+        reg_clean = registered_domain.lower().strip()
+        for brand, canonicals in TARGET_BRAND_CANONICAL_DOMAINS.items():
+            if reg_clean in canonicals:
+                if re.search(rf"\b{re.escape(brand)}\b", text_content, re.IGNORECASE):
+                    return brand
+
+    # 2. Strip standard third-party OAuth, app store, and footer mentions to avoid false brand hijacking
+    sanitized_text = text_content
+    for pattern in OAUTH_AND_SOCIAL_PATTERNS:
+        sanitized_text = re.sub(pattern, " ", sanitized_text, flags=re.IGNORECASE)
+
+    lower_text = sanitized_text.lower()
     for brand in TARGET_BRAND_CANONICAL_DOMAINS.keys():
         # Word boundary match to prevent partial substring matches (e.g., 'chase' in 'purchase')
         if re.search(rf"\b{re.escape(brand)}\b", lower_text):

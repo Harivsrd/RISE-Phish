@@ -99,7 +99,10 @@ class EvidenceFusionEngine:
         # Check semantic representation claims if not found
         if not detected_brand and rep_set and rep_set.r4_semantic:
             search_text = f"{rep_set.r4_semantic.title or ''} {rep_set.r4_semantic.headings_text}"
-            detected_brand = identify_claimed_brand(search_text)
+            detected_brand = identify_claimed_brand(
+                search_text,
+                registered_domain=rep_set.r5_url.registered_domain if rep_set and rep_set.r5_url else None
+            )
 
         # Check CRCE url_brand_discrepancy
         if not detected_brand and crce_result and crce_result.url_brand_discrepancy > 0.0:

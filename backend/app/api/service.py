@@ -162,9 +162,9 @@ async def analyze_url_pipeline(
     # 7. CRCE Discrepancy Evaluation
     crce_res = evaluate_discrepancies(rep_set)
     detected_brand = (
-        identify_claimed_brand(rep_set.r2_normalized.text)
-        or identify_claimed_brand(rep_set.r3_visual.text)
-        or identify_claimed_brand(rep_set.r1_raw.text)
+        identify_claimed_brand(rep_set.r2_normalized.text, registered_domain=rep_set.r5_url.registered_domain)
+        or identify_claimed_brand(rep_set.r3_visual.text, registered_domain=rep_set.r5_url.registered_domain)
+        or identify_claimed_brand(rep_set.r1_raw.text, registered_domain=rep_set.r5_url.registered_domain)
     )
 
     # 8. SLM Dual-Task Reasoning & Recovery
