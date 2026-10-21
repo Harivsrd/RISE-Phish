@@ -88,3 +88,53 @@ class CrawlerResult(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of collection"
     )
+
+
+# ============================================================
+# HTML PROCESSING MODELS (Phase 2)
+# ============================================================
+
+class HeadingItem(BaseModel):
+    """Extracted HTML heading tag details."""
+    level: int = Field(description="Heading depth (1 for h1, 2 for h2, etc.)")
+    text: str = Field(description="Cleaned text content of heading")
+
+
+class ImageSummary(BaseModel):
+    """Image element metadata."""
+    src: Optional[str] = Field(default=None, description="Image source URI")
+    alt: Optional[str] = Field(default=None, description="Alternative text description")
+    title: Optional[str] = Field(default=None, description="Title attribute")
+
+
+class HTMLFeatures(BaseModel):
+    """Structured extraction of features from rendered HTML.
+    
+    Prevents flooding the SLM with raw HTML while retaining critical
+    structural, lexical, and credential-seeking context.
+    """
+    title: Optional[str] = Field(default=None, description="Document title")
+    headings: List[HeadingItem] = Field(default_factory=list, description="All extracted heading items (h1-h6)")
+    paragraphs: List[str] = Field(default_factory=list, description="Non-empty paragraph texts")
+    visible_text: str = Field(default="", description="Sanitized, script/style-free visible body text")
+    links: List[str] = Field(default_factory=list, description="Unique hyperlinks discovered in markup")
+    forms: List[FormSummary] = Field(default_factory=list, description="Structured summaries of all form elements")
+    buttons: List[str] = Field(default_factory=list, description="Extracted text and labels of interactive buttons")
+    input_fields: List[FormInput] = Field(default_factory=list, description="All input fields found across DOM")
+    password_inputs: List[FormInput] = Field(default_factory=list, description="Identified credential/password fields")
+    images: List[ImageSummary] = Field(default_factory=list, description="Extracted image elements")
+    alt_texts: List[str] = Field(default_factory=list, description="Non-empty image alt attribute descriptions")
+    placeholders: List[str] = Field(default_factory=list, description="All input/textarea placeholder labels")
+    meta_attributes: Dict[str, str] = Field(default_factory=dict, description="Metadata tags (description, keywords, og:*)")
+    
+    # Statistical / heuristic indicators
+    total_tags: int = Field(default=0, description="Count of HTML tags parsed")
+    script_count: int = Field(default=0, description="Count of script elements present")
+    iframe_count: int = Field(default=0, description="Count of iframe elements present")
+    has_password_field: bool = Field(default=False, description="True if any password inputs are present")
+    
+    # Structured representation for SLM ingestion
+    structured_slm_text: str = Field(
+        default="", 
+        description="Concise, structured plain-text representation suitable for SLM context without DOM bloat"
+    )
