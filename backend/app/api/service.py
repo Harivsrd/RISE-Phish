@@ -204,6 +204,17 @@ async def analyze_url_pipeline(
     decision_engine = DecisionEngine(default_policy=ThreatPosturePolicy.BALANCED)
     decision = decision_engine.evaluate(fused)
 
+    # If the network crawler could not reach or resolve the target, it cannot be certified safe
+    if not crawler_result.success and decision.verdict == ThreatVerdict.SAFE:
+        decision.verdict = ThreatVerdict.INVESTIGATE
+        decision.recommended_action = DefensiveAction.WARN_USER
+        decision.composite_threat_score = max(decision.composite_threat_score, 0.45)
+        decision.confidence_score = 0.50
+        decision.decision_summary = (
+            f"VERDICT: INVESTIGATE (Action: WARN_USER). Target could not be reached ({crawler_result.error_type or 'network error'}). "
+            f"Unreachable domains or inactive links cannot be validated as authentic."
+        )
+
     # 11. Dual-Audience Explainability Engine
     explanation_engine = ExplanationEngine()
     explanation = explanation_engine.explain(

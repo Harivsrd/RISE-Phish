@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import get_settings
 from backend.app.core.logging import logger
 from backend.app.api.routes import router as api_router
+from backend.app.api.demo import router as demo_router
 from backend.app.storage.database import get_db_manager
 
 settings = get_settings()
@@ -45,6 +46,8 @@ def create_application() -> FastAPI:
 
     # Register API routes
     application.include_router(api_router, prefix=settings.API_V1_PREFIX)
+    application.include_router(demo_router)
+    application.include_router(demo_router, prefix=settings.API_V1_PREFIX)
 
     return application
 

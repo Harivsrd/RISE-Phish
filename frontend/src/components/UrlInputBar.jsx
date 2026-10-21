@@ -8,15 +8,21 @@ export default function UrlInputBar({ onAnalyze, loading }) {
   const sampleTargets = [
     {
       label: 'Zero-Day Math Alphanumeric',
-      url: 'https://portal-session-sync.net/auth',
-      badge: 'Unseen Attack',
+      url: 'http://127.0.0.1:8000/demo/zero-day-math',
+      badge: 'Unseen Phishing',
       badgeColor: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
     },
     {
       label: 'Cyrillic Homoglyph Spoof',
-      url: 'https://login.mіcrosoft-auth.xyz/signin',
-      badge: 'Visual Convergence',
+      url: 'http://127.0.0.1:8000/demo/cyrillic-homoglyph',
+      badge: 'Visual Phishing',
       badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+    },
+    {
+      label: 'Credential Harvest Portal',
+      url: 'http://127.0.0.1:8000/demo/credential-harvest',
+      badge: 'Brand Spoof',
+      badgeColor: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     },
     {
       label: 'Authentic Official Portal',

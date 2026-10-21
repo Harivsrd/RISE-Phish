@@ -4,6 +4,13 @@ import logging
 import sys
 from backend.app.core.config import get_settings
 
+# Ensure standard output safely handles arbitrary Unicode characters on Windows
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 settings = get_settings()
 
 

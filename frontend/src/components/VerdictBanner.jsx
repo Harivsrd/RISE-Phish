@@ -65,6 +65,12 @@ export default function VerdictBanner({ result }) {
               Action: <strong className="text-white">{action}</strong>
             </span>
 
+            {result.status === 'DEGRADED' && (
+              <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-mono font-semibold">
+                Network: Host Unreachable
+              </span>
+            )}
+
             {isConvergence && (
               <span className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono font-semibold animate-pulse">
                 <Zap className="w-3.5 h-3.5" />
