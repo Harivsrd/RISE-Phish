@@ -1,6 +1,7 @@
 """Pydantic schemas and data contracts for RISE-Phish.
 """
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Dict, List, Optional, Any, Tuple
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -625,4 +626,78 @@ class FusedEvidence(BaseModel):
     fused_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of evidence fusion calculation"
+    )
+
+
+# ============================================================
+# DECISION ENGINE MODELS (Phase 11)
+# ============================================================
+
+class ThreatVerdict(str, Enum):
+    """Operational security threat classification verdict."""
+    SAFE = "SAFE"
+    INVESTIGATE = "INVESTIGATE"
+    PHISHING = "PHISHING"
+
+
+class DefensiveAction(str, Enum):
+    """Prescribed automated defensive posture response."""
+    ALLOW = "ALLOW"
+    WARN_USER = "WARN_USER"
+    ISOLATE_SANDBOX = "ISOLATE_SANDBOX"
+    BLOCK_ACCESS = "BLOCK_ACCESS"
+
+
+class ThreatPosturePolicy(str, Enum):
+    """Configurable organization security posture policy."""
+    BALANCED = "balanced"
+    STRICT = "strict"
+    PERMISSIVE = "permissive"
+
+
+class DecisionResult(BaseModel):
+    """Final operational decision emitted by the RISE-Phish Decision Engine.
+    
+    Transforms continuous composite evidence into definitive policy-grounded
+    verdicts with actionable defensive recommendations.
+    """
+    verdict: ThreatVerdict = Field(
+        description="Primary security verdict: SAFE, INVESTIGATE, or PHISHING"
+    )
+    recommended_action: DefensiveAction = Field(
+        description="Defensive posture: ALLOW, WARN_USER, ISOLATE_SANDBOX, or BLOCK_ACCESS"
+    )
+    composite_threat_score: float = Field(
+        description="Calibrated threat score from Phase 10 evidence fusion (0.0 to 1.0)"
+    )
+    confidence_score: float = Field(
+        description="Statistical confidence in verdict determination (0.0 to 1.0)"
+    )
+    policy_applied: ThreatPosturePolicy = Field(
+        default=ThreatPosturePolicy.BALANCED,
+        description="Security posture threshold policy evaluated"
+    )
+    policy_thresholds: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Threshold cutoffs utilized for SAFE, INVESTIGATE, and PHISHING"
+    )
+    triggered_rules: List[str] = Field(
+        default_factory=list,
+        description="Deterministic security policy rules that were satisfied"
+    )
+    risk_reasons: List[str] = Field(
+        default_factory=list,
+        description="Executive risk factors justifying the verdict"
+    )
+    target_brand: Optional[str] = Field(
+        default=None,
+        description="Target brand identified as being impersonated or spoofed, if any"
+    )
+    decision_summary: str = Field(
+        default="",
+        description="Comprehensive explainable research narrative detailing the final verdict"
+    )
+    decided_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of decision generation"
     )
