@@ -553,3 +553,76 @@ class SLMDualTaskResult(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of SLM execution"
     )
+
+
+# ============================================================
+# EVIDENCE FUSION MODELS (Phase 10)
+# ============================================================
+
+class EvidenceFactor(BaseModel):
+    """Granular contributing factor within the multi-source evidence fusion framework."""
+    component: str = Field(description="Evidence vector identifier (e.g. brand_spoofing, crce_discrepancy)")
+    raw_score: float = Field(description="Unweighted score normalized to [0.0, 1.0]")
+    weight: float = Field(description="Configured importance weight for this dimension")
+    weighted_score: float = Field(description="Raw score multiplied by weight")
+    description: str = Field(description="Human-readable justification for this factor's contribution")
+
+
+class FusedEvidence(BaseModel):
+    """Structured output of the Deterministic Evidence Fusion Engine.
+    
+    Synthesizes multi-representation discrepancies, brand authenticity, credential
+    seeking vectors, URL lexical metrics, and SLM reasoning into a unified,
+    explainable composite threat assessment.
+    """
+    composite_threat_score: float = Field(
+        description="Calibrated threat score from 0.0 (benign) to 1.0 (definitive malicious attack)"
+    )
+    vector_scores: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Normalized component scores across all evidence dimensions"
+    )
+    evidence_weights: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Importance weights utilized in this fusion calculation"
+    )
+    interaction_boost: float = Field(
+        default=0.0,
+        description="Non-linear synergistic boost applied when evasive discrepancies coincide with credential theft"
+    )
+    key_indicators: List[str] = Field(
+        default_factory=list,
+        description="High-salience security indicators discovered across webpage representations"
+    )
+    factors: List[EvidenceFactor] = Field(
+        default_factory=list,
+        description="Granular component breakdown explaining each factor's numerical contribution"
+    )
+    discrepancy_significant: bool = Field(
+        default=False,
+        description="True if cross-representation divergence exceeds significance threshold"
+    )
+    visual_normalization_convergence: bool = Field(
+        default=False,
+        description="Core research indicator: DOM text diverges while visual rendering converges with normalized form"
+    )
+    target_brand: Optional[str] = Field(
+        default=None,
+        description="Target brand identified as being impersonated or spoofed"
+    )
+    is_brand_mismatch: bool = Field(
+        default=False,
+        description="True if page claims a brand not authorized by the registered domain"
+    )
+    has_credential_seeking: bool = Field(
+        default=False,
+        description="True if page contains password inputs or credential entry forms"
+    )
+    fusion_rationale: str = Field(
+        default="",
+        description="Explainable narrative detailing the multi-source evidence synthesis"
+    )
+    fused_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Timestamp of evidence fusion calculation"
+    )
