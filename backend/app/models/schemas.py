@@ -848,3 +848,56 @@ class DatasetSplit(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp of split creation"
     )
+
+
+# ============================================================
+# API & PERSISTENCE SCHEMAS (Phase 17)
+# ============================================================
+
+class AnalysisSummary(BaseModel):
+    """Compact summary of an analyzed URL for listing and history views."""
+    analysis_id: str = Field(description="Unique analysis tracking identifier")
+    url: str = Field(description="Analyzed URL target")
+    status: str = Field(description="Processing status: PENDING, COMPLETED, FAILED")
+    verdict: ThreatVerdict = Field(description="Final operational threat verdict")
+    recommended_action: DefensiveAction = Field(description="Automated defensive posture")
+    composite_threat_score: float = Field(description="Calibrated threat score [0.0, 1.0]")
+    confidence_score: float = Field(description="Confidence level [0.0, 1.0]")
+    target_brand: Optional[str] = Field(default=None, description="Identified brand target")
+    registered_domain: Optional[str] = Field(default=None, description="Resolved registered domain")
+    visual_normalization_convergence: bool = Field(default=False, description="Whether visual convergence was detected")
+    created_at: datetime = Field(description="Analysis initiation timestamp")
+    completed_at: Optional[datetime] = Field(default=None, description="Analysis completion timestamp")
+
+
+class AnalysisDetailResponse(AnalysisSummary):
+    """Full forensic analysis response containing complete technical evidence."""
+    representations: Optional[RepresentationSet] = Field(default=None, description="R1-R5 representation suite")
+    crce: Optional[CRCEResult] = Field(default=None, description="CRCE discrepancy matrix and convergence")
+    unicode_analysis: Optional[UnicodeAnalysisResult] = Field(default=None, description="Unicode forensic report")
+    url_features: Optional[URLFeatures] = Field(default=None, description="Syntactic and lexical URL features")
+    html_features: Optional[HTMLFeatures] = Field(default=None, description="DOM structural features")
+    decision: Optional[DecisionResult] = Field(default=None, description="Calibrated operational decision")
+    fused_evidence: Optional[FusedEvidence] = Field(default=None, description="Multi-representation fused evidence")
+    explanation: Optional[ExplanationReport] = Field(default=None, description="Dual-audience explainability report")
+    error_message: Optional[str] = Field(default=None, description="Error details if analysis failed")
+
+
+class AnalysisHistoryResponse(BaseModel):
+    """Paginated list of historical URL analyses."""
+    items: List[AnalysisSummary] = Field(default_factory=list, description="Array of analysis summaries")
+    total: int = Field(description="Total matching records in storage")
+    limit: int = Field(description="Pagination limit")
+    offset: int = Field(description="Pagination offset")
+
+
+class DashboardStatsResponse(BaseModel):
+    """Aggregated telemetry and security metrics for dashboard visualizations."""
+    total_scans: int = Field(description="Total URLs analyzed")
+    phishing_detected: int = Field(description="Total confirmed phishing attacks")
+    safe_sites: int = Field(description="Total confirmed benign websites")
+    investigate_sites: int = Field(description="Total sites flagged for investigation")
+    visual_convergences_detected: int = Field(description="Total visual convergence evasion attempts")
+    average_threat_score: float = Field(description="Mean composite threat score")
+    top_targeted_brands: Dict[str, int] = Field(default_factory=dict, description="Target brand frequencies")
+

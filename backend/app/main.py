@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.config import get_settings
 from backend.app.core.logging import logger
 from backend.app.api.routes import router as api_router
+from backend.app.storage.database import get_db_manager
 
 settings = get_settings()
 
@@ -14,6 +15,9 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown procedures."""
     logger.info(f"Starting {settings.APP_NAME} in '{settings.APP_ENV}' environment.")
+    # Initialize SQLite database schema
+    db = get_db_manager()
+    db.init_db()
     yield
     logger.info(f"Shutting down {settings.APP_NAME}.")
 
