@@ -1,0 +1,30 @@
+.git
+.gitignore
+.dockerignore
+.venv
+venv
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases and temporary data
+rise_phish.db
+rise_phish.db-wal
+rise_phish.db-shm
+temp/
+*.log
+
+# Frontend build artifacts and node_modules
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db

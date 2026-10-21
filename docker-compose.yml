@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: rise-phish-backend:latest
+    container_name: rise-phish-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=RISE-Phish API
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - SQLITE_DB_URL=sqlite:////app/data/rise_phish.db
+      - CRAWLER_TIMEOUT_MS=30000
+      - OCR_ENGINE=tesseract
+      - SLM_BACKEND=mock
+      - SLM_MODEL_NAME=Qwen/Qwen2.5-0.5B-Instruct
+    volumes:
+      - rise_phish_data:/app/data
+      - rise_phish_screenshots:/app/temp/screenshots
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: rise-phish-frontend:latest
+    container_name: rise-phish-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  rise_phish_data:
+    name: rise_phish_sqlite_storage
+  rise_phish_screenshots:
+    name: rise_phish_screenshot_storage
