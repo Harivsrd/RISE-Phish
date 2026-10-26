@@ -50,6 +50,27 @@ URGENCY_TRIGGERS: List[Tuple[str, float]] = [
     (r"\bprevent\s+(?:closure|deletion)\b", 0.30),
 ]
 
+# Benign transactional and notification patterns that dampen false urgency alarms
+BENIGN_TRANSACTIONAL_PATTERNS: List[Tuple[str, float]] = [
+    (r"\border\s*#?\s*\d+", 0.25),
+    (r"\b(?:view|download)\s+(?:your\s+)?(?:receipt|invoice|statement)\b", 0.25),
+    (r"\b(?:manage|update)\s+(?:your\s+)?(?:preferences|notifications|settings)\b", 0.20),
+    (r"\bunsubscribe\b", 0.20),
+    (r"\bweekly\s+(?:digest|summary|newsletter)\b", 0.25),
+    (r"\bmonthly\s+(?:statement|newsletter|update)\b", 0.25),
+    (r"\ball\s+rights\s+reserved\b", 0.15),
+    (r"\bprivacy\s+policy\b", 0.15),
+    (r"\bterms\s+of\s+service\b", 0.15),
+]
+
+# Authorized enterprise email service providers (ESPs) and transactional mail relays
+AUTHORIZED_ESP_RELAYS: Set[str] = {
+    "sendgrid.net", "sendgrid.com", "mcsv.net", "mailchimp.com",
+    "mailgun.org", "mailgun.net", "amazonses.com", "awstrack.me",
+    "postmarkapp.com", "substack.com", "salesforce.com", "exacttarget.com",
+    "zendesk.com", "intercom-mail.com", "sparkpostmail.com", "hubspotemail.net",
+}
+
 # Adversarial prompt injection keywords in untrusted message bodies
 PROMPT_INJECTION_PATTERNS: List[str] = [
     r"\[SYSTEM OVERRIDE\]",
@@ -87,6 +108,8 @@ def sanitize_and_bound_input(request: MessageAnalysisRequest) -> MessageAnalysis
 
 def evaluate_urgency_indicators(subject: str, body: str) -> Tuple[float, List[str]]:
     """Analyzes message subject and body for psychological manipulation and coercive urgency.
+    Dampens urgency if routine transactional signals (e.g. order receipts, digests, unsubscribe)
+    are present.
 
     Returns:
         (urgency_score in [0.0, 1.0], list of detected triggers)
@@ -102,6 +125,17 @@ def evaluate_urgency_indicators(subject: str, body: str) -> Tuple[float, List[st
             if matched_phrase not in detected:
                 detected.append(matched_phrase)
                 score += weight
+
+    # Benign transactional dampening:
+    # If routine transactional cues exist, discount generic triggers (e.g. "security alert", "action required")
+    # while preserving strong coercive threat language
+    if score > 0:
+        dampening = 0.0
+        for pattern, weight in BENIGN_TRANSACTIONAL_PATTERNS:
+            if re.search(pattern, combined_text):
+                dampening += weight
+
+        score = max(0.0, score - min(dampening, 0.35))
 
     # Cap score at 1.0
     return min(1.0, round(score, 4)), detected
@@ -163,14 +197,25 @@ def evaluate_sender_authenticity(
         for c in canonical_domains
     )
 
-    if not is_authorized:
-        finding = (
-            f"Sender display name impersonates '{claimed_brand.title()}', "
-            f"but email is sent from unauthorized domain '@{email_domain}'."
-        )
-        return True, finding, claimed_brand
+    if is_authorized:
+        return False, None, claimed_brand
 
-    return False, None, claimed_brand
+    # Check if sending domain is an authorized transactional ESP relay
+    is_esp_relay = any(
+        email_domain == esp or email_domain.endswith(f".{esp}")
+        for esp in AUTHORIZED_ESP_RELAYS
+    )
+    if is_esp_relay:
+        finding = (
+            f"Message sent via third-party email relay service '@{email_domain}' on behalf of '{claimed_brand.title()}'."
+        )
+        return False, finding, claimed_brand
+
+    finding = (
+        f"Sender display name impersonates '{claimed_brand.title()}', "
+        f"but email is sent from unauthorized domain '@{email_domain}'."
+    )
+    return True, finding, claimed_brand
 
 
 def evaluate_link_text_mismatch(link: MessageEmbeddedLink) -> Tuple[bool, str]:
@@ -344,6 +389,10 @@ async def analyze_message_pipeline(
     ssrf_blocked_count = sum(1 for link in link_verdicts if link.ssrf_blocked)
     phishing_links_count = sum(1 for link in link_verdicts if link.verdict == ThreatVerdict.PHISHING)
     max_link_threat = max((link.composite_threat_score for link in link_verdicts), default=0.0)
+    all_links_safe = len(link_verdicts) > 0 and all(
+        link.verdict == ThreatVerdict.SAFE and not link.is_mismatch and not link.ssrf_blocked
+        for link in link_verdicts
+    )
 
     # 8. Multi-Signal Evidence Fusion for Messages
     indicators = MessageIndicators(
@@ -359,17 +408,17 @@ async def analyze_message_pipeline(
 
     # Decision Matrix Calculation
     # Factors contributing to message threat score:
-    # - Sender impersonation: +0.45
-    # - Link-text mismatch: +0.40
-    # - Max link threat score: up to +0.50
+    # - Sender impersonation: +0.40 (or +0.25 if all links are verified safe)
+    # - Link-text mismatch: +0.35
+    # - Max link threat score: up to +0.45
     # - Urgency score: up to +0.25
     # - Homoglyphs: up to +0.20
-    # - Prompt injection: +0.30
+    # - Prompt injection: +0.35
     threat_components = []
     threat_components.append(max_link_threat * 0.45)
 
     if sender_discrepancy:
-        threat_components.append(0.40)
+        threat_components.append(0.25 if all_links_safe else 0.40)
     if mismatch_count > 0:
         threat_components.append(0.35)
     if urgency_score > 0.4:
@@ -401,12 +450,18 @@ async def analyze_message_pipeline(
     if ssrf_blocked_count > 0:
         key_findings.append(f"{ssrf_blocked_count} link(s) blocked due to internal/loopback IP restrictions.")
 
-    # Decision Policy: require corroborating signals for CONFIRMED PHISHING to prevent false alarms
+    # Multi-Signal Corroboration Decision Policy:
+    # A CONFIRMED PHISHING verdict requires at least ONE definitive threat or TWO corroborated attack signals:
+    # 1. Direct confirmed phishing or anchor-hijacked destination (phishing_links_count > 0)
+    # 2. Confirmed anchor text hijacking (mismatch_count > 0) corroborated by urgency, sender spoofing, or unverified target
+    # 3. Sender brand spoofing corroborated by an unverified/risky link OR severe coercive urgency (>=0.40)
+    # 4. Multi-signal convergence (composite_threat >= 0.65) where links are NOT verified safe.
+    # Note: If all embedded links are verified 100% safe, sender ambiguity alone cannot trigger CONFIRMED PHISHING.
     is_phishing = (
         phishing_links_count > 0
-        or (sender_discrepancy and len(bounded_req.embedded_links) > 0)
-        or (mismatch_count > 0 and (urgency_score > 0.2 or sender_discrepancy))
-        or composite_threat >= 0.65
+        or (mismatch_count > 0 and (urgency_score > 0.15 or sender_discrepancy or not all_links_safe))
+        or (sender_discrepancy and (max_link_threat > 0.35 or urgency_score >= 0.40 or homoglyphs_count > 0) and not all_links_safe)
+        or (composite_threat >= 0.65 and not all_links_safe)
     )
 
     if is_phishing:

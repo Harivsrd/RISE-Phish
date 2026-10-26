@@ -327,3 +327,69 @@ def test_api_message_analysis_endpoint_http(client: TestClient):
     assert data["indicators"]["sender_discrepancy_detected"] is True
     assert len(data["link_analyses"]) == 1
     assert data["link_analyses"][0]["is_mismatch"] is True
+
+
+@pytest.mark.asyncio
+async def test_esp_relay_benign_newsletter():
+    """Verify that a legitimate newsletter sent via an ESP relay is classified as SAFE."""
+    req = MessageAnalysisRequest(
+        subject="Your Weekly Machine Learning Digest",
+        sender="Kaggle Team",
+        sender_address="newsletters@news.kaggle.com",
+        body_text="Here are this week's top datasets and competitions. Manage your preferences or unsubscribe here.",
+        embedded_links=[
+            MessageEmbeddedLink(
+                url="https://www.kaggle.com/competitions",
+                text="Explore Competitions",
+            )
+        ],
+        site_identifier="gmail",
+    )
+    response = await analyze_message_pipeline(req)
+    assert response.verdict == ThreatVerdict.SAFE
+    assert response.recommended_action == DefensiveAction.ALLOW
+    assert response.indicators.sender_discrepancy_detected is False
+
+
+@pytest.mark.asyncio
+async def test_routine_transactional_notification_dampening():
+    """Verify that routine transactional notification urgency is dampened and classified as SAFE."""
+    req = MessageAnalysisRequest(
+        subject="Security alert: New login from Windows",
+        sender="Google Account",
+        sender_address="no-reply@accounts.google.com",
+        body_text="We noticed a new sign-in to your Google Account. If this was you, no action is needed. View invoice or order #9821. Manage notifications.",
+        embedded_links=[
+            MessageEmbeddedLink(
+                url="https://myaccount.google.com/notifications",
+                text="Review Activity on Google",
+            )
+        ],
+        site_identifier="gmail",
+    )
+    response = await analyze_message_pipeline(req)
+    assert response.verdict == ThreatVerdict.SAFE
+    assert response.recommended_action == DefensiveAction.ALLOW
+
+
+@pytest.mark.asyncio
+async def test_sender_discrepancy_with_safe_link_yields_investigate_not_phishing():
+    """Verify that an ambiguous sender with verified safe links yields INVESTIGATE rather than CONFIRMED PHISHING."""
+    req = MessageAnalysisRequest(
+        subject="Community Newsletter",
+        sender="Google Developer Group",
+        sender_address="organizer@community-meetup-group.org",
+        body_text="Join us for our upcoming tech talk on open-source web tooling.",
+        embedded_links=[
+            MessageEmbeddedLink(
+                url="https://developers.google.com",
+                text="Google Developers Documentation",
+            )
+        ],
+        site_identifier="gmail",
+    )
+    response = await analyze_message_pipeline(req)
+    # Must NOT jump to CONFIRMED PHISHING because the link is verified authentic
+    assert response.verdict == ThreatVerdict.INVESTIGATE
+    assert response.recommended_action == DefensiveAction.WARN_USER
+    assert response.summary_headline == "SUSPICIOUS MESSAGE — PROCEED WITH CAUTION"
