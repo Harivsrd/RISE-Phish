@@ -11,8 +11,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED.svg)](https://www.docker.com/)
 
 > **Final-Year B.Tech Capstone Thesis & Research Project**  
-> *Department of Computer Science & Engineering / Cybersecurity*  
-> *Target Hardware Profile: NVIDIA GeForce RTX 3050 (4 GB VRAM), 16 GB Host RAM, Windows 11 / Linux*
+> *Department of Artificial Intelligence & Machine Learning*  
 
 ---
 
